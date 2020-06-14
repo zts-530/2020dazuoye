@@ -1,0 +1,13 @@
+游戏名称（改）：塔防
+基本功能：
+多类型敌人和其多类型的攻击手段。
+不同类型的防御塔及其不同属性。
+游戏难度随游戏进度不断增加。
+开发工具：qt
+是否采用游戏引擎：暂时没有
+GitHub：https://github.com/zts-530/2020dazuoye/tree/master
+
+已实现的功能：做了一个初始界面（mainwindow.h/.cpp)
+                        实现第一和第二界面的转换(nextwindow.h/.cpp)
+                        实现设置第一种防御塔（tower.h/.cpp)
+                        实现第一种敌人的出现和移动(enemy.h/.cpp)
