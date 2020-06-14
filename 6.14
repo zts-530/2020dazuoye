@@ -1,0 +1,284 @@
+因为用一些上传不上的（不知道什么原因），所以我把代码复制在这里
+mainwindow.h:
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+#include <QPainter>
+#include <QPixmap>
+#include <QPaintEvent>
+#include <QPushButton>
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+    void paintEvent(QPaintEvent *);
+private:
+    Ui::MainWindow *ui;
+};
+#endif // MAINWINDOW_H
+
+
+
+
+
+
+
+
+mainwindow.cpp:
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include <QPainter>
+#include <QPixmap>
+#include <QPaintEvent>
+#include <QPushButton>
+#include "nextwindow.h"
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    this->setFixedSize(1000,700);
+    ui->setupUi(this);
+
+    QPushButton * b = new QPushButton(this);
+    b->setFixedSize(100,50);
+    b->setStyleSheet("QPushButton{color:white;background:black;border: 3px groove gray;border-radius:8px;border-style:outset}"
+                     "QPushButton:hover{background-color:white; color: black;}"
+                     "QPushButton:pressed{background-color:rgb(85, 170, 255); border-style:inset;}");
+    b->setText("play");
+    b->move(725,480);
+    nextwindow * n = new nextwindow;
+    connect(b,&QPushButton::clicked,this,[=](){
+        this->close();
+        n->show();
+    });
+
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    QPixmap pixmap(":/zhujiemian.jpg");
+    painter.drawPixmap(0,0,this->width(),this->height(),pixmap);
+
+}
+
+
+
+
+
+
+
+
+nextwindow.h:
+#ifndef NEXTWINDOW_H
+#define NEXTWINDOW_H
+
+#include <QMainWindow>
+#include <QPaintEvent>
+#include <QPainter>
+#include "tower.h"
+#include <QList>
+#include "enemy.h"
+class nextwindow : public QMainWindow
+{
+    Q_OBJECT
+public:
+    explicit nextwindow(QWidget *parent = nullptr);
+    void paintEvent(QPaintEvent *);
+    void setTower();
+    void setenemy();
+    void upd();
+private:
+    QList<tower*> towerlist;
+    QList<enemy*> enemylist;
+signals:
+
+};
+
+#endif // NEXTWINDOW_H
+
+
+
+
+
+
+
+
+nextwindow.cpp:
+#include "nextwindow.h"
+#include <QPushButton>
+#include <QTimer>
+nextwindow::nextwindow(QWidget *parent) : QMainWindow(parent)
+{
+    this->setFixedSize(1000,700);
+    QPushButton * settw = new QPushButton(this);
+    settw->setFixedSize(30,30);
+    settw->setStyleSheet("QPushButton{background:yellow;border: 3px groove gray;border-radius:8px;border-style:outset}"
+                     "QPushButton:hover{background-color:white;}"
+                     "QPushButton:pressed{background-color:rgb(85, 170, 255); border-style:inset;}");
+    settw->move(560,420);
+
+    connect(settw,&QPushButton::clicked,this,&nextwindow::setTower);
+
+    QPushButton * setemy = new QPushButton(this);
+    setemy->setFixedSize(30,30);
+    setemy->setStyleSheet("QPushButton{background:red;border: 3px groove gray;border-radius:8px;border-style:outset}"
+                     "QPushButton:hover{background-color:white;}"
+                     "QPushButton:pressed{background-color:rgb(85, 170, 255); border-style:inset;}");
+    setemy->move(800,600);
+
+    connect(setemy,&QPushButton::clicked,this,&nextwindow::setenemy);
+
+    QTimer * timer = new QTimer(this);
+    connect(timer,&QTimer::timeout,this,&nextwindow::upd);
+    timer->start(10);
+
+}
+void nextwindow::paintEvent(QPaintEvent *){
+    QPainter painter(this);
+    QPixmap pixmap(":/nexm.jpg");
+    painter.drawPixmap(0,0,this->width(),this->height(),pixmap);
+    foreach(tower * t,towerlist)
+        t->draw(&painter);
+    foreach(enemy * en,enemylist)
+        en->drawenemy(&painter);
+}
+void nextwindow::setTower(){
+    tower * nt =new tower(QPoint(500,330),":/tower.png");
+    towerlist.push_back(nt);
+    update();
+}
+
+void nextwindow::setenemy(){
+    enemy * en = new enemy(":/enemy.png",QPoint(1000,350));
+    enemylist.push_back(en);
+    en->move();
+    update();
+}
+
+void nextwindow::upd(){
+    update();
+}
+
+
+
+
+
+
+tower.h:
+#ifndef TOWER_H
+#define TOWER_H
+
+#include <QObject>
+#include <QPoint>
+#include <QPixmap>
+class tower : public QObject
+{
+    Q_OBJECT
+public:
+    tower(QPoint point,QString pix);
+    void draw(QPainter * painter);
+private:
+    QPoint _point;
+    QPixmap pixmap;
+signals:
+
+};
+
+#endif // TOWER_H
+
+
+
+
+
+
+
+tower.cpp:
+#include "tower.h"
+#include <QPoint>
+#include <QPixmap>
+#include <QPainter>
+tower::tower(QPoint point,QString pix):QObject(0),pixmap(pix){
+    _point=point;
+}
+void tower::draw(QPainter * painter){
+    painter->drawPixmap(_point.x(),_point.y(),60,140,pixmap);
+}
+
+
+
+
+
+
+
+enemy.h:
+#ifndef ENEMY_H
+#define ENEMY_H
+
+#include <QObject>
+#include <QPropertyAnimation>
+#include <QPixmap>
+#include <QPainter>
+#include <QPoint>
+class enemy : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QPoint p READ getpoint WRITE setpoint)
+public:
+    enemy(QString pix,QPoint p);
+    void drawenemy(QPainter * painter);
+    QPoint getpoint();
+    void setpoint(QPoint);
+    void move();
+private:
+    QPixmap pixmap;
+    QPoint p;
+signals:
+
+};
+
+#endif // ENEMY_H
+
+
+
+
+
+
+
+enemy.cpp:
+#include "enemy.h"
+
+enemy::enemy(QString pix,QPoint p):QObject(0),pixmap(pix){
+    this->p=p;
+};
+
+void enemy::drawenemy(QPainter *painter){
+    painter->drawPixmap(p.rx(),p.ry(),60,60,pixmap);
+}
+QPoint enemy::getpoint(){
+    return this->p;
+}
+void enemy::setpoint(QPoint poi){
+    this->p=poi;
+}
+void enemy::move(){
+    QPropertyAnimation *animation = new QPropertyAnimation(this, "p");
+    animation->setDuration(20000);
+    animation->setStartValue(QPoint(1000,350));
+    animation->setEndValue(QPoint(5,350));
+    animation->start();
+}
